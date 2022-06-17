@@ -6,14 +6,23 @@ Setuptools can build C/C++ extension modules.  The keyword argument
 ``ext_modules`` of ``setup()`` should be a list of instances of the
 :class:`setuptools.Extension` class.
 
+Overview
+========
 
-For example, let's consider a simple project with only one extension module::
+To understand how this works, let us consider a very simple project with
+only one extension module.
+This project will be named ``calculate``, and will provide C functions to add
+and subtract two integers.
+The directory structure of this project could be as follows::
 
     <project_folder>
+    ├── add.c
+    ├── calculate
+    │   └── __init__.py
     ├── pyproject.toml
-    └── foo.c
+    └── subtract.c
 
-and all project metadata configuration in the ``pyproject.toml`` file:
+Here, ``pyproject.toml`` contains a basic project metadata configuration:
 
 .. code-block:: toml
 
@@ -23,26 +32,128 @@ and all project metadata configuration in the ``pyproject.toml`` file:
    build-backend = "setuptools.build_meta"
 
    [project]
-   name = "mylib-foo"  # as it would appear on PyPI
+   name = "calculate"  # as it would appear on PyPI
    version = "0.42"
 
-To instruct setuptools to compile the ``foo.c`` file into the extension module
-``mylib.foo``, we need to add a ``setup.py`` file similar to the following:
+The C code is contained in two files ``add.c`` and ``subtract.c``, and could
+be as follows:
+
+.. code-block:: c
+
+    // add.c
+    int add(int a, int b) {
+        return a + b;
+    }
+
+    // subtract.c
+    int subtract(int a, int b) {
+        return a - b;
+    }
+
+Now, this C code needs to be compiled into a dynamic library in order to enable
+the Python interpreter to link to it at runtime. A simple way to carry out this
+compilation (on Linux systems) is to run:
+
+.. code-block:: bash
+
+   $ gcc -shared -o libcalculate.so add.c subtract.c
+
+This will create a dynamic library ``libcalculate.so`` inside ``<project_folder>``.
+
+Coming to the Python side, let us say all we want to do is import the ``add()``
+and ``subtract()`` functions of the ``libcalculate`` library, and make them
+available from within the ``calculate`` package namespace, i.e. in
+``calculate/__init__.py`` we write:
 
 .. code-block:: python
 
-   from setuptools import Extension, setup
+   from libcalculate import add, subtract
 
-   setup(
-       ext_modules=[
-           Extension(
-               name="mylib.foo",  # as it would be imported
-                                  # may include packages/namespaces separated by `.`
+However, this import will not work. And that is because regular C code cannot
+integrate with Python code "just like that". Python exposes a certain C API, and
+C code has to work with and conform to that API in order to integrate with Python
+code. To make our C code integrate with Python code, we can do something like the
+following:
 
-               sources=["foo.c"], # all sources are compiled into a single binary file
-           ),
-       ]
-   )
+.. code-block:: c
+
+   // add.h
+   int add(int a, int b);
+
+   // subtract.h
+   int subtract(int a, int b);
+
+   // calculate.c
+
+   #include <Python.h>
+   #include "add.h"
+   #include "subtract.h"
+   
+   static PyObject *libcalculate_add(PyObject *self, PyObject *args) {
+       int a, b;
+       if (!PyArg_ParseTuple(args, "ii", &a, &b))
+           return NULL;
+       int result = add(a, b);
+       return PyLong_FromLong(result);
+   }
+   
+   static PyObject *libcalculate_subtract(PyObject *self, PyObject *args) {
+       int a, b;
+       if (!PyArg_ParseTuple(args, "ii", &a, &b))
+           return NULL;
+       int result = subtract(a, b);
+       return PyLong_FromLong(result);
+   }
+   
+   static PyMethodDef LibcalculateMethods[] = {
+       {"add", libcalculate_add, METH_VARARGS, "Add two integers."},
+       {"subtract", libcalculate_subtract, METH_VARARGS, "Subtract two integers."},
+       {NULL, NULL, 0, NULL},
+   };
+   
+   static struct PyModuleDef libcalculate_module = {
+       PyModuleDef_HEAD_INIT,
+       "libcalculate",
+       "Simple calculation module.",
+       -1,
+       LibcalculateMethods,
+   };
+   
+   PyMODINIT_FUNC
+   PyInit_libcalculate(void) {
+       return PyModule_Create(&libcalculate_module);
+   }
+
+Basically, along with two header files ``add.h`` and ``subtract.h``, we have created
+a new file ``calculate.c`` which wraps around the C functions ``add()`` and ``subtract()``
+and registers them as valid methods of a Python module named ``libcalculate``.
+
+.. note::
+   Writing C extensions for the CPython interpreter is an involved topic. As such, it is
+   beyond the scope of this guide. To understand more about the code in ``calculate.c``
+   above, you may refer to the `Python docs about C/C++ extensions`_.
+
+After these changes, the compilation command has to be slightly modified:
+
+.. code-block:: bash
+
+   $ gcc -shared -o libcalculate.so -I/usr/include/python3.10 \
+        add.c calculate.c subtract.c
+
+Here ``/usr/include/python3.10`` represents the path to the ``Python.h`` header file
+(if you are using a Unix system and the Python version is 3.10), the file exposing
+Python's C API.
+
+At this point, after compiling the library, you can open up a Python shell inside
+``<project_folder>`` and verify that everything works:
+
+.. code-block:: pycon
+
+   >>> import calculate
+   >>> calculate.add(3, 5)
+   8
+   >>> calculate.subtract(3, 5)
+   -2
 
 .. seealso::
    You can find more information on the `Python docs about C/C++ extensions`_.
