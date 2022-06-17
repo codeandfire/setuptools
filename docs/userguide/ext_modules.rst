@@ -155,6 +155,18 @@ At this point, after compiling the library, you can open up a Python shell insid
    >>> calculate.subtract(3, 5)
    -2
 
+So where does Setuptools come in?
+
+.. code-block:: python
+
+   from setuptools import setup, Extension
+
+   libcalculate_ext = Extension(
+       name='libcalculate',
+       sources=['add.c', 'calculate.c', 'subtract.c'])
+
+   setup(ext_modules=[libcalculate_ext])
+
 .. seealso::
    You can find more information on the `Python docs about C/C++ extensions`_.
    Alternatively, you might also be interested in learn about `Cython`_.
