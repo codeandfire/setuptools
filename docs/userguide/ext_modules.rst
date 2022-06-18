@@ -156,6 +156,12 @@ At this point, after compiling the library, you can open up a Python shell insid
    -2
 
 So where does Setuptools come in?
+Basically, Setuptools provides a way of simplifying the compilation step, and
+also registers the compiled library as a part of your package. We will see how
+this works shortly.
+
+Configuration of extension modules for Setuptools must be done via a
+``setup.py`` file. For our example, we can use the following configuration:
 
 .. code-block:: python
 
@@ -166,6 +172,75 @@ So where does Setuptools come in?
        sources=['add.c', 'calculate.c', 'subtract.c'])
 
    setup(ext_modules=[libcalculate_ext])
+
+Basically, each extension module in your package must be configured as an
+instance of the :class:`setuptools.Extension` class, and then, you must pass to
+the ``setup()`` function a keyword argument ``ext_modules`` with a list of
+these instances.
+
+.. tip::
+   Note that it is currently not possible to configure extension modules via
+   ``setup.cfg`` or ``pyproject.toml``, so you must use ``setup.py``. A preferred
+   arrangement is to use a minimal ``setup.py`` file: in other words, your
+   ``setup.py`` should only contain configuration pertaining to extension
+   modules, while all other metadata/configuration pertaining to the project
+   should be stored in a ``setup.cfg`` or ``pyproject.toml`` file.
+
+.. note::
+   The ``name`` of the extension specifies the name with which it will be
+   imported on the Python side. As such, it can include a dot ``.`` to denote
+   packages/namespaces. For example
+
+   .. code-block:: python
+
+      libcalculate_ext = Extension(
+          name='calculate.libcalculate',
+          ...,
+      )
+
+   is perfectly valid, and then the code in ``calculate/__init__.py`` will
+   correspondingly change to (note the relative import):
+
+   .. code-block:: python
+
+      from .libcalculate import add, subtract
+
+.. note::
+
+   The ``sources`` argument of the extension must list all of your C source
+   code files. Note that you must not include any header files i.e. files
+   ending in ``.h``, or this will give you an error on building the extension.
+   For example if we try to add the header file ``add.h`` as follows:
+
+   .. code-block:: python
+
+      libcalculate_ext = Extension(
+          ...,
+          sources=['add.c', 'add.h', 'calculate.c', 'subtract.c'])
+
+   then when Setuptools tries to build the extension, it will produce the
+   following error::
+
+       error: unknown file type '.h' (from 'add.h')
+
+   Another point is that if you would like to use globs, you must use the
+   standard library :mod:`glob` module to expand the globs prior to passing
+   them as ``sources``. For example, this will not work:
+
+   .. code-block:: python
+
+      libcalculate_ext = Extension(
+          ...,
+          sources=['*.c'])
+
+   but this will:
+
+   .. code-block:: python
+
+      import glob
+      libcalculate_ext = Extension(
+          ...,
+          sources=[file for file in glob.glob('*.c')])
 
 .. seealso::
    You can find more information on the `Python docs about C/C++ extensions`_.
