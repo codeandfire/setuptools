@@ -264,6 +264,24 @@ Even during development, when you run an editable install:
 the extension module(s) will be compiled and placed in an appropriate location
 such that it is accessible to the Python interpreter.
 
+.. tip::
+
+   Earlier, when it was standard practice to run commands via ``setup.py``,
+   it was possible to run the command:
+
+   .. code-block:: bash
+
+      $ python setup.py build_ext
+
+   to build all extension modules. However, running this command is no longer
+   recommended. To recompile extension modules and bring into effect any changes
+   made to your non-Python source code, you are advised to simply *re-run* the
+   editable install command:
+
+   .. code-block:: bash
+
+      $ pip install -e .
+
 .. seealso::
    You can find more information on the `Python docs about C/C++ extensions`_.
    Alternatively, you might also be interested in learn about `Cython`_.
