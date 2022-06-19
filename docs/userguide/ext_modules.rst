@@ -251,8 +251,8 @@ package:
    # or
    $ python -m build . --wheel
 
-compilation of the extension module(s) will be automatically triggered, i.e.
-you do not have to write out the ``gcc`` command yourself, and the compiled
+compilation of the extension module(s) will be automatically triggered (i.e.
+you do not have to write out the ``gcc`` command yourself) and the compiled
 library will be appropriately inserted into the resulting wheel.
 
 Even during development, when you run an editable install:
