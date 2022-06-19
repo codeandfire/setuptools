@@ -155,12 +155,12 @@ At this point, after compiling the library, you can open up a Python shell insid
    >>> calculate.subtract(3, 5)
    -2
 
-So where does Setuptools come in?
-Basically, Setuptools provides a way of simplifying the compilation step, and
-also registers the compiled library as a part of your package. We will see how
-this works shortly.
+Our discussion so far illustrates the entire process of integrating C code with
+Python code. So where does Setuptools fit into the process? Basically,
+Setuptools facilitates an easier process of compiling the C code, i.e. the C
+extension module(s), and shipping it along with the Python code.
 
-Configuration of extension modules for Setuptools must be done via a
+To register extension modules with Setuptools, they must be configured via a
 ``setup.py`` file. For our example, we can use the following configuration:
 
 .. code-block:: python
