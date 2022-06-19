@@ -242,6 +242,28 @@ these instances.
           ...,
           sources=[file for file in glob.glob('*.c')])
 
+Now, with this configuration in place, whenever you build a wheel for your
+package:
+
+.. code-block:: bash
+
+   $ python -m build .
+   # or
+   $ python -m build . --wheel
+
+compilation of the extension module(s) will be automatically triggered, i.e.
+you do not have to write out the ``gcc`` command yourself, and the compiled
+library will be appropriately inserted into the resulting wheel.
+
+Even during development, when you run an editable install:
+
+.. code-block:: bash
+
+   $ pip install -e .
+
+the extension module(s) will be compiled and placed in an appropriate location
+such that it is accessible to the Python interpreter.
+
 .. seealso::
    You can find more information on the `Python docs about C/C++ extensions`_.
    Alternatively, you might also be interested in learn about `Cython`_.
