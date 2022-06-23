@@ -37,8 +37,6 @@ and you supply this configuration:
         [options]
         # ...
         packages = find:
-        package_dir =
-            = src
         include_package_data = True
 
         [options.packages.find]
@@ -114,8 +112,6 @@ data files:
         [options]
         # ...
         packages = find:
-        package_dir =
-            = src
 
         [options.packages.find]
         where = src
@@ -186,8 +182,6 @@ use the ``package_data`` option, the following configuration will work:
 
         [options]
         packages = find:
-        package_dir =
-            = src
 
         [options.packages.find]
         where = src
@@ -264,8 +258,6 @@ use the ``exclude_package_data`` option:
         [options]
         # ...
         packages = find:
-        package_dir =
-            = src
         include_package_data = True
 
         [options.packages.find]
@@ -338,8 +330,6 @@ the configuration might look like this:
         [options]
         # ...
         packages = find_namespace:
-        package_dir =
-            = src
 
         [options.packages.find]
         where = src
@@ -393,8 +383,6 @@ scanning of namespace packages in the ``src`` directory and the rest is handled 
 
         [options]
         packages = find_namespace:
-        package_dir =
-            = src
         include_package_data = True
 
         [options.packages.find]
